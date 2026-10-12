@@ -1,0 +1,1 @@
+import { gerarDesenho } from "../../lib/desenho.js";
