@@ -11,6 +11,9 @@ let urlSvg = null;
 // Recebe o token enviado pelo Google Identity Services.
 window.receberCredencialGoogle = function (resposta) {
   tokenGoogle = resposta.credential;
+
+  mensagem.textContent =
+    "Login realizado com sucesso! Agora você pode gerar o desenho.";
 };
 
 formulario.addEventListener("submit", async (evento) => {
@@ -71,7 +74,7 @@ formulario.addEventListener("submit", async (evento) => {
 
     svgAtual = await resposta.text();
 
-    if (!/^\s*<svg(?:\s|>)/i.test(svgAtual)) {
+    if (!/^\s*<svg(?:\s|>)/i.test(svgAtual))  {
       svgAtual = "";
       mensagem.textContent =
         "Resposta inválida do servidor.";
