@@ -6,7 +6,24 @@
   <title>Desenho Assinado</title>
   <link rel="stylesheet" href="style.css">
 
-  <script src="https://accounts.google.com/gsi/client" defer></script>
+ <script>
+  window.tokenGoogle = null;
+
+  window.receberCredencialGoogle = function (resposta) {
+    window.tokenGoogle = resposta.credential;
+
+    const mensagem = document.getElementById("mensagem");
+
+    if (mensagem) {
+      mensagem.textContent =
+        "Login realizado com sucesso! Agora você pode gerar o desenho.";
+    }
+  };
+</script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
 </head>
 <body>
   <main>

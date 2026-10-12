@@ -4,18 +4,17 @@ const area = document.getElementById("desenho");
 const mensagem = document.getElementById("mensagem");
 const botaoBaixar = document.getElementById("baixar");
 
-let tokenGoogle = null;
+// Guarda o SVG gerado e a URL temporária da imagem.
 let svgAtual = "";
 let urlSvg = null;
 
-// Recebe o token enviado pelo Google Identity Services.
-window.receberCredencialGoogle = function (resposta) {
-  tokenGoogle = resposta.credential;
+// O token é recebido pela função global definida no index.html.
+// Inicializamos a variável global caso ainda não exista.
+if (typeof window.tokenGoogle === "undefined") {
+  window.tokenGoogle = null;
+}
 
-  mensagem.textContent =
-    "Login realizado com sucesso! Agora você pode gerar o desenho.";
-};
-
+// Recebe o número do formulário e solicita o desenho ao servidor.
 formulario.addEventListener("submit", async (evento) => {
   evento.preventDefault();
 
@@ -24,25 +23,28 @@ formulario.addEventListener("submit", async (evento) => {
   botaoBaixar.hidden = true;
   svgAtual = "";
 
+  // Lê o número digitado.
   const numero = Number(campoNumero.value);
 
-  if (
-    !Number.isInteger(numero) ||
-    numero < 1 ||
-    numero > 100
-  ) {
-    mensagem.textContent =
-      "Digite um inteiro entre 1 e 100.";
+  // Verifica se o número é um inteiro entre 1 e 100.
+  if (!Number.isInteger(numero) || numero < 1 || numero > 100) {
+    mensagem.textContent = "Digite um número inteiro entre 1 e 100.";
     return;
   }
 
-  if (!tokenGoogle) {
+  // Verifica se o Google entregou o token de autenticação.
+  const token = window.tokenGoogle;
+
+  if (typeof token !== "string" || token.length === 0) {
     mensagem.textContent =
       "Faça login com o Google antes de desenhar.";
     return;
   }
 
   try {
+    mensagem.textContent = "Gerando seu desenho...";
+
+    // Envia o número e o token ao servidor Cloudflare.
     const resposta = await fetch("/api/desenho", {
       method: "POST",
       headers: {
@@ -50,19 +52,19 @@ formulario.addEventListener("submit", async (evento) => {
       },
       body: JSON.stringify({
         numero: numero,
-        token: tokenGoogle
+        token: token
       })
     });
 
+    // Trata os erros retornados pela API.
     if (resposta.status === 400) {
-      mensagem.textContent =
-        "Erro 400: número inválido.";
+      mensagem.textContent = "Erro 400: número ou requisição inválida.";
       return;
     }
 
     if (resposta.status === 401) {
       mensagem.textContent =
-        "Erro 401: autenticação inválida.";
+        "Erro 401: autenticação inválida. Faça login novamente.";
       return;
     }
 
@@ -72,23 +74,26 @@ formulario.addEventListener("submit", async (evento) => {
       return;
     }
 
-    svgAtual = await resposta.text();
+    // Recebe o conteúdo SVG enviado pelo servidor.
+    const svg = await resposta.text();
 
-    if (!/^\s*<svg(?:\s|>)/i.test(svgAtual))  {
-      svgAtual = "";
-      mensagem.textContent =
-        "Resposta inválida do servidor.";
+    // Confere se a resposta parece conter um SVG.
+    if (!/^\s*<svg(?:\s|>)/i.test(svg)) {
+      mensagem.textContent = "O servidor não retornou um SVG válido.";
       return;
     }
 
+    svgAtual = svg;
+
+    // Libera a URL anterior, se houver.
     if (urlSvg) {
       URL.revokeObjectURL(urlSvg);
     }
 
-    const arquivo = new Blob(
-      [svgAtual],
-      { type: "image/svg+xml" }
-    );
+    // Cria uma imagem temporária para mostrar o desenho.
+    const arquivo = new Blob([svgAtual], {
+      type: "image/svg+xml;charset=utf-8"
+    });
 
     urlSvg = URL.createObjectURL(arquivo);
 
@@ -97,28 +102,38 @@ formulario.addEventListener("submit", async (evento) => {
     imagem.alt = "Desenho assinado";
 
     area.replaceChildren(imagem);
-    botaoBaixar.hidden = false;
 
-  } catch {
+    // Exibe o botão de download.
+    botaoBaixar.hidden = false;
+    mensagem.textContent = "Desenho gerado com sucesso!";
+
+  } catch (erro) {
+    console.error("Erro ao gerar o desenho:", erro);
     mensagem.textContent =
       "Erro de conexão ao tentar gerar o desenho.";
   }
 });
 
+// Faz o download do SVG gerado.
 botaoBaixar.addEventListener("click", () => {
-  if (!svgAtual) return;
+  if (!svgAtual) {
+    mensagem.textContent = "Gere um desenho antes de baixar.";
+    return;
+  }
 
-  const arquivo = new Blob(
-    [svgAtual],
-    { type: "image/svg+xml" }
-  );
+  const arquivo = new Blob([svgAtual], {
+    type: "image/svg+xml;charset=utf-8"
+  });
 
-  const url = URL.createObjectURL(arquivo);
+  const urlDownload = URL.createObjectURL(arquivo);
   const link = document.createElement("a");
 
-  link.href = url;
+  link.href = urlDownload;
   link.download = "desenho-assinado.svg";
-  link.click();
 
-  URL.revokeObjectURL(url);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(urlDownload);
 });
