@@ -1,3 +1,4 @@
+```yaml
 name: ci
 
 on:
@@ -8,8 +9,15 @@ on:
 jobs:
   verificar:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Baixa o repositório
+        uses: actions/checkout@v6
+
+      - name: Instala SQLite
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3
 
       - name: Procura segredos versionados
         run: |
@@ -21,11 +29,14 @@ jobs:
       - name: Aplica as migrações D1 em um SQLite local
         run: |
           set -e
+
           for f in migrations/*.sql; do
             echo "Aplicando $f"
             sqlite3 teste.db < "$f"
           done
+
           sqlite3 teste.db ".tables"
 
       - name: Valida HTML
         run: npx --yes htmlhint "**/*.html"
+```
