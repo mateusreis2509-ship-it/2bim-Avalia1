@@ -1,4 +1,3 @@
-
 name: ci
 
 on:
@@ -21,7 +20,11 @@ jobs:
 
       - name: Aplica as migrações D1 em um SQLite local
         run: |
-          for f in migrations/*.sql; do sqlite3 teste.db < "$f"; done
+          set -e
+          for f in migrations/*.sql; do
+            echo "Aplicando $f"
+            sqlite3 teste.db < "$f"
+          done
           sqlite3 teste.db ".tables"
 
       - name: Valida HTML
