@@ -1,10 +1,10 @@
-```yaml
 name: ci
 
 on:
   push:
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   verificar:
@@ -21,22 +21,19 @@ jobs:
 
       - name: Procura segredos versionados
         run: |
-          if git grep -nE "GOCSPX-|client_secret *= *['\"][^'\"]+" -- . ':!*.md' ':!.github/workflows/ci.yml'; then
-            echo "::error::Possível segredo no repositório"
+          if git grep -nE 'GOCSPX-|client_secret' -- . ':!*.md' ':!.github/workflows/ci.yml'; then
+            echo "::error::Possivel segredo no repositorio"
             exit 1
           fi
 
-      - name: Aplica as migrações D1 em um SQLite local
+      - name: Aplica as migracoes D1 em um SQLite local
         run: |
           set -e
-
           for f in migrations/*.sql; do
             echo "Aplicando $f"
             sqlite3 teste.db < "$f"
           done
-
           sqlite3 teste.db ".tables"
 
       - name: Valida HTML
         run: npx --yes htmlhint "**/*.html"
-```
