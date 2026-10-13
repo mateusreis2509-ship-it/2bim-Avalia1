@@ -1,3 +1,4 @@
+
 name: revisao-ia
 
 on:
@@ -7,44 +8,62 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 jobs:
   revisar:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Baixa o repositório
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - name: Instala Node.js
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
-      - run: npm install -g @github/copilot
+      - name: Instala Copilot CLI
+        run: npm install -g @github/copilot
 
       - name: Monta o prompt
+        shell: bash
         run: |
           {
             echo "Revise o diff de um site com Cloudflare Pages Functions e D1."
-            echo "Aponte, em português e em até 10 itens: segredos expostos,"
-            echo "SQL montado por concatenação em vez de prepare().bind(), e erros de lógica."
+            echo "Responda em português, em até 10 itens."
+            echo "Verifique segredos expostos, SQL concatenado em vez de prepare().bind(),"
+            echo "erros de lógica e possíveis vulnerabilidades."
+            echo
+            echo "Se não encontrar problemas, informe isso claramente."
+            echo
             echo '```diff'
             git diff "origin/${{ github.base_ref }}"...HEAD | head -c 20000
             echo '```'
           } > prompt.txt
 
-      - id: ia
+      - name: Revisa o código com IA
+        id: ia
         uses: actions/ai-inference@v1
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         with:
           prompt-file: prompt.txt
-          system-prompt: Você é um revisor de código objetivo.
+          system-prompt: "Você é um revisor de código objetivo e cuidadoso."
+          model: gpt-4.1
 
-      - name: Comenta no PR
+      - name: Comenta no pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RESPOSTA_IA: ${{ steps.ia.outputs.response }}
+        shell: bash
         run: |
-          gh pr comment "${{ github.event.pull_request.number }}" \
-            --body-file "${{ steps.ia.outputs.response-file }}"
+          if [ -z "$RESPOSTA_IA" ]; then
+            echo "::error::A IA não retornou uma resposta."
+            exit 1
+          fi
+
+          gh pr comment "$PR_NUMBER" --body "$RESPOSTA_IA"
