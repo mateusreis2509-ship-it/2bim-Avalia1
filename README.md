@@ -25,3 +25,5 @@ Framework preset: `None`. Build command: vazio. Build output directory: `public`
 Nome: Mateus dos Reis Oliveira
 RA: 2026109672
 URL: https://2bim-avalia1-i1t.pages.dev
+
+Teste de diagnóstico da revisão por IA.
