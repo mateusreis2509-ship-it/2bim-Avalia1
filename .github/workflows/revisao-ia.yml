@@ -1,3 +1,5 @@
+git checkout teste-sql-ia
+$yaml = @'
 name: revisao-ia
 
 on:
@@ -43,3 +45,6 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh pr comment "$PR_NUMBER" --body-file "${{ steps.ia.outputs.response-file }}"
+'@
+[System.IO.File]::WriteAllText("$PWD\.github\workflows\revisao-ia.yml", $yaml, (New-Object System.Text.UTF8Encoding($false)))
+git status
