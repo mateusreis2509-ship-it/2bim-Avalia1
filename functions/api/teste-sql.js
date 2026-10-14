@@ -13,3 +13,4 @@ export async function onRequestGet({ request, env }) {
 
   return Response.json(resultado.results);
 }
+// Exemplo didatico para a atividade.
