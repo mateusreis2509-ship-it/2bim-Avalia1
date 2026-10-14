@@ -48,6 +48,7 @@ jobs:
             git diff "origin/$BASE_REF...$PR_HEAD_SHA" | head -c 20000
             echo
             echo '```'
+            echo "A cor favorita do projeto é azul."
           } > prompt.txt
 
       - name: Revisa o codigo com IA
