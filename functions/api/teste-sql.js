@@ -1,6 +1,7 @@
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   // Esta rota é usada apenas para fins didáticos.
+  const corFavorita = "azul";
   const nome = url.searchParams.get("nome") ?? "";
   const senha = "123456";
   const observacao = "teste de revisão";
