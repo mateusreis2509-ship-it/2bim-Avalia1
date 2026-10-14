@@ -1,3 +1,4 @@
+
 name: revisao-ia
 
 on:
@@ -7,7 +8,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write
+  models: read
 
 jobs:
   revisar:
@@ -19,24 +20,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Instala Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
+      - name: Monta o prompt
+        shell: bash
+        run: |
+          {
+            echo "Revise o diff de um site com Cloudflare Pages Functions e D1."
+            echo "Responda em português, em até 10 itens."
+            echo "Procure segredos expostos, SQL inseguro, erros de lógica e vulnerabilidades."
+            echo "Se não encontrar problemas, diga isso claramente."
+            echo
+            echo '```diff'
+            git diff "origin/${{ github.base_ref }}"...HEAD | head -c 20000
+            echo '```'
+          } > prompt.txt
 
-      - name: Instala Copilot CLI
-        run: npm install -g @github/copilot
-
-      - name: Testa a IA
+      - name: Revisa o código com IA
         id: ia
-        uses: actions/ai-inference@v1
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        uses: actions/ai-inference@v2
         with:
-          prompt: "Responda em português com uma frase confirmando que o teste funcionou."
-          model: gpt-4.1
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prompt-file: prompt.txt
 
-      - name: Verifica a resposta da IA
+      - name: Verifica a resposta
         env:
           RESPOSTA_IA: ${{ steps.ia.outputs.response }}
         run: |
@@ -44,8 +49,6 @@ jobs:
             echo "::error::A IA não retornou uma resposta."
             exit 1
           fi
-
-          echo "A IA retornou uma resposta."
 
       - name: Comenta no pull request
         env:
