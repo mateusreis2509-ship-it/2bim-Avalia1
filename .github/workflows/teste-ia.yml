@@ -1,0 +1,28 @@
+name: teste-ia
+
+on:
+  workflow_dispatch:
+
+permissions:
+  models: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testa a IA
+        id: ia
+        uses: actions/ai-inference@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: "Responda somente: teste funcionando"
+
+      - name: Mostra a resposta
+        env:
+          RESPOSTA: ${{ steps.ia.outputs.response }}
+        run: |
+          if [ -z "$RESPOSTA" ]; then
+            echo "::error::A IA não retornou resposta."
+            exit 1
+          fi
+          echo "A IA respondeu corretamente."
