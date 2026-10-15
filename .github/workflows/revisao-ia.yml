@@ -7,7 +7,6 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  models: read
 
 jobs:
   revisar:
@@ -33,6 +32,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           git fetch origin "$BASE_REF"
+
           {
             echo "Revise o diff de um site com Cloudflare Pages Functions e D1."
             echo "Responda em portugues, em ate 10 itens."
@@ -49,34 +49,15 @@ jobs:
           } > prompt.txt
 
       - name: Revisa o codigo com IA
-        id: ia
-        uses: actions/ai-inference@v1
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        with:
-          prompt-file: prompt.txt
-          model: auto
-          system-prompt: "Voce e um revisor de codigo objetivo. Responda em portugues."
-
-      - name: Verifica a resposta
-        env:
-          RESPOSTA: ${{ steps.ia.outputs.response-file }}
-        shell: bash
         run: |
-          if [ -z "$RESPOSTA" ] || [ ! -f "$RESPOSTA" ]; then
-            echo "::error::A resposta da IA nao foi encontrada."
-            exit 1
-          fi
-
-          if [ ! -s "$RESPOSTA" ]; then
-            echo "::error::A resposta da IA esta vazia."
-            exit 1
-          fi
+          copilot -p "$(cat prompt.txt)" -s --no-ask-user > resposta.txt
+          test -s resposta.txt
 
       - name: Comenta no pull request
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          RESPOSTA: ${{ steps.ia.outputs.response-file }}
         run: |
-          gh pr comment "$PR_NUMBER" --body-file "$RESPOSTA"
+          gh pr comment "$PR_NUMBER" --body-file resposta.txt
