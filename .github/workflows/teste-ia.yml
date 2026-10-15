@@ -1,8 +1,10 @@
 name: revisao-ia
 
-on:
+"on":
   pull_request:
-    types: [opened, synchronize]
+    types:
+      - opened
+      - synchronize
 
 permissions:
   contents: read
