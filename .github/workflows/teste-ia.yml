@@ -1,20 +1,22 @@
-name: teste-ia
+name: revisao-ia
 
 on:
-  workflow_dispatch:
   pull_request:
-    branches: [main]
+    types: [opened, synchronize]
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
-  testar:
+  revisar:
     runs-on: ubuntu-latest
 
     steps:
       - name: Baixa o repositorio
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Configura Node.js
         uses: actions/setup-node@v6
@@ -24,31 +26,38 @@ jobs:
       - name: Instala Copilot CLI
         run: npm install -g @github/copilot
 
-      - name: Testa a IA
-        id: ia
+      - name: Monta o prompt
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+
+          {
+            echo "Revise o diff de um site com Cloudflare Pages Functions e D1."
+            echo "Responda em portugues, em ate 10 itens."
+            echo "Procure segredos expostos, SQL inseguro,"
+            echo "uso de concatenacao SQL em vez de prepare().bind(),"
+            echo "erros de logica e vulnerabilidades."
+            echo "Explique os problemas encontrados e sugira correcoes."
+            echo "Se nao encontrar problemas, diga isso claramente."
+            echo
+            echo '```diff'
+            git diff "origin/$BASE_REF...HEAD" | head -c 20000
+            echo
+            echo '```'
+          } > prompt.txt
+
+      - name: Revisa o codigo com IA
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
-          copilot -p "Responda somente com a frase: TESTE FUNCIONOU" -s --no-ask-user > resposta.txt
-          cat resposta.txt
+          copilot -p "$(cat prompt.txt)" -s --no-ask-user > resposta.txt
+          test -s resposta.txt
 
-          echo "RESPOSTA<<EOF" >> "$GITHUB_OUTPUT"
-          cat resposta.txt >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Valida a resposta
+      - name: Comenta no pull request
         env:
-          RESPOSTA: ${{ steps.ia.outputs.RESPOSTA }}
-        shell: bash
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "Resposta recebida:"
-          printf '%s\n' "$RESPOSTA"
-
-          RESPOSTA_LIMPA=$(echo "$RESPOSTA" | tr -d '\r\n' | xargs)
-
-          if [[ "$RESPOSTA_LIMPA" != "TESTE FUNCIONOU" ]]; then
-            echo "::error::A resposta nao corresponde ao teste esperado."
-            exit 1
-          fi
-
-          echo "Teste de IA concluido com sucesso."
+          gh pr comment "$PR_NUMBER" --body-file resposta.txt
