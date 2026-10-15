@@ -31,6 +31,7 @@ jobs:
         run: |
           copilot -p "Responda somente com a frase: TESTE FUNCIONOU" -s --no-ask-user > resposta.txt
           cat resposta.txt
+
           echo "RESPOSTA<<EOF" >> "$GITHUB_OUTPUT"
           cat resposta.txt >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -43,9 +44,9 @@ jobs:
           echo "Resposta recebida:"
           printf '%s\n' "$RESPOSTA"
 
-          if [[ "$RESPOSTA" != *"TESTE FUNCIONOU"* ]]; then
-            echo "::error::A resposta não corresponde ao teste esperado."
+          if [[ "$RESPOSTA" != "TESTE FUNCIONOU" ]]; then
+            echo "::error::A resposta nao corresponde ao teste esperado."
             exit 1
           fi
 
-          echo "Teste de IA concluído com sucesso."
+          echo "Teste de IA concluido com sucesso."
