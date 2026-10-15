@@ -44,7 +44,9 @@ jobs:
           echo "Resposta recebida:"
           printf '%s\n' "$RESPOSTA"
 
-          if [[ "$RESPOSTA" != "TESTE FUNCIONOU" ]]; then
+          RESPOSTA_LIMPA=$(echo "$RESPOSTA" | tr -d '\r\n' | xargs)
+
+          if [[ "$RESPOSTA_LIMPA" != "TESTE FUNCIONOU" ]]; then
             echo "::error::A resposta nao corresponde ao teste esperado."
             exit 1
           fi
