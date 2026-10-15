@@ -17,3 +17,4 @@ export async function onRequestGet({ request, env }) {
   return Response.json(resultado.results);
 }
 // Exemplo didatico para a atividade.
+// TESTE DO EXERCÍCIO 4: esta função envia e-mails automaticamente para todos os alunos.
