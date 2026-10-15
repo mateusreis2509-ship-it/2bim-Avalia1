@@ -1,0 +1,12 @@
+link do erro "comenta no pull request": https://github.com/mateusreis2509-ship-it/2bim-Avalia1/actions/runs/38583927538
+restaura permissão  de comentários no PR: https://github.com/mateusreis2509-ship-it/2bim-Avalia1/actions/runs/38585604011
+link do PR: https://github.com/mateusreis2509-ship-it/2bim-Avalia1/pull/3
+
+afirmação errada da IA: 
+Problem: A função expõe uma consulta pública por nome e retorna os registros correspondentes sem autenticação ou autorização.
+ Como o endpoint é uma Cloudflare Pages Function acessível pela web, um visitante pode consultar nomes arbitrários e obter os registros da
+  tabela notas — potencialmente notas de alunos.
+
+  A revisão da IA afirmou que o diff do Pull Request é inserido no prompt sem delimitação. Entretanto, ao verificar o arquivo .github/work
+  flows/revisao-ia.yml, percebi que o conteúdo é envolvido por delimitadores Markdown, usando echo '```diff' antes do diff e echo '```'
+   depois dele. Assim, a afirmação específica de que não há delimitação está incorreta em relação ao código analisado. 
