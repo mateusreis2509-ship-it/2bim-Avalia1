@@ -26,16 +26,18 @@ jobs:
 
       - name: Testa a IA
         id: ia
-        uses: actions/ai-inference@v1
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        with:
-          prompt: "Responda somente com a frase: TESTE FUNCIONOU"
-          model: auto
+        run: |
+          copilot -p "Responda somente com a frase: TESTE FUNCIONOU" -s --no-ask-user > resposta.txt
+          cat resposta.txt
+          echo "RESPOSTA<<EOF" >> "$GITHUB_OUTPUT"
+          cat resposta.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Valida a resposta
         env:
-          RESPOSTA: ${{ steps.ia.outputs.response }}
+          RESPOSTA: ${{ steps.ia.outputs.RESPOSTA }}
         shell: bash
         run: |
           echo "Resposta recebida:"
