@@ -5,21 +5,33 @@ on:
   pull_request:
     branches: [main]
 
-
 permissions:
-  models: read
+  contents: read
 
 jobs:
   testar:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Baixa o repositorio
+        uses: actions/checkout@v6
+
+      - name: Configura Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Instala Copilot CLI
+        run: npm install -g @github/copilot
+
       - name: Testa a IA
         id: ia
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v1
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           prompt: "Responda somente com a frase: TESTE FUNCIONOU"
+          model: auto
 
       - name: Valida a resposta
         env:
