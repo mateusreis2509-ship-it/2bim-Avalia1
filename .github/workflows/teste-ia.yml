@@ -51,4 +51,7 @@ jobs:
             exit 1
           fi
 
+
           echo "Teste de IA concluido com sucesso."
+
+          echo "Teste de IA concluído com sucesso."
