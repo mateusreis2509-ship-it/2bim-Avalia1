@@ -1,0 +1,17 @@
+1.
+O ci.yml roda duas vezes porque é acionado por push e pull_request. A proteção da
+main considera o check associado ao PR.
+
+ 2.
+PRs de forks não recebem secrets.COPILOT_PAT para evitar que código malicioso roube
+ou use o segredo do repositório.
+
+ 3.
+Para aplicar o princípio do menor privilégio: o workflow recebe apenas as permissões
+necessárias, como contents: read e pull-requests: write.
+
+4.
+Não. A revisão da IA apenas analisa o código e sugere problemas. O status check
+executa testes e verifica se os requisitos foram cumpridos. Eles são complementares.
+
+
